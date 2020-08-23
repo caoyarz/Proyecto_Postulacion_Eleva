@@ -1,7 +1,11 @@
 <template>
   <div>
-    <h1>Hamburguesas</h1>
-    <button class="boton_nueva">Nueva Hamburguesa</button>
+     <center><img src="../assets/hamburguesa3.png" alt=""></center>
+    <div class="titulo">
+    Hamburguesas
+     
+    </div>
+   
     <table >
      <tr>
        <th>Nombre</th>
@@ -13,23 +17,42 @@
        <td>{{hamburguesa.nombre}}</td>
        <td>{{hamburguesa.calorias}}</td>       
        <td> <button @click="detalleHamburguesas(hamburguesa._id)"  class="boton_detalles" ></button></td>
-       <!--<td> <button @click.prevent="ventana=true" class="boton_detalles" :key="hamburguesa.id" >Modificar</button></td>
-       <td> <button @click.prevent="ventana=true" class="boton_detalles" :key="hamburguesa.id" >Eliminar</button></td>-->
+        <td><button class="boton_modifica" @click="actualizaHamburguesas(hamburguesa._id)"  ></button> 
+        <button class="boton_elimina"  @click="confirmarEliminacion(hamburguesa._id)"></button></td>
      </tr>
     </table>    
-
-    <div class="overlay" v-bind="ventana" v-if="ventana">
+    <!--  POPUP PARA MOSTRAR LOS DETALLES-------------------------------------->
+    <div class="overlay"  v-if="detalles">
       <div  class="ventana_detalles">       
         <strong>Nombre:</strong> {{hamburguesaSeleccionada[0].nombre}}<br>
-        <strong>Calorías:</strong>{{hamburguesaSeleccionada[0].calorias}}<br>
+        <strong>Calorías:</strong> {{hamburguesaSeleccionada[0].calorias}}<br>
         <strong>Ingredientes:</strong>
         <ul class="ingrediente">
         <li  v-for="ingrediente in hamburguesaSeleccionada[0].ingredientes" :key="ingrediente">{{ingrediente}}</li>
-        </ul>
-       
-        <button @click.prevent="ventana=false" class="boton_cerrar_info">Cerrar</button>
+        </ul>       
+        <button @click="detalles=false" class="boton_cerrar_info">Cerrar</button>
       </div>
     </div>
+
+    
+    <!--POPUP PARA MODIFICAR UNA HAMBURGUESA------------------------------------->
+      <!--
+    <div class="overlay"  v-if="modificar">
+      <div  class="ventana_detalles">       
+        <strong>Nombre:</strong> {{hamburguesaSeleccionada[0].nombre}}<br>
+        <strong>Calorías:</strong> {{hamburguesaSeleccionada[0].calorias}}<br>
+        <strong>Ingredientes:</strong>
+        <ul class="ingrediente">
+        <li  v-for="ingrediente in hamburguesaSeleccionada[0].ingredientes" :key="ingrediente">{{ingrediente}}</li>
+        </ul>       
+        <button @click="modificar=false" class="boton_cerrar_info">Cerrar</button>
+      </div>
+    </div>-->
+    <!--POPUP PARA ELIMINAR UNA HAMBURGUESA------------------------------------->
+
+
+
+
   </div>
 </template>
 
@@ -39,8 +62,10 @@ export default {
   data() {
     return {
       hamburguesas: null,
-      ventana: false,
-      hamburguesaSeleccionada: null,
+      detalles: false,
+      eliminar: false,
+      modificar: false,
+      hamburguesaSeleccionada: {},
     };
   },
   mounted() {
@@ -60,8 +85,26 @@ export default {
       this.hamburguesaSeleccionada = this.hamburguesas.filter(
         (burger) => burger._id === id
       );
+      this.detalles = true;
+    },
+    confirmarEliminacion: function(id) {
+      this.hamburguesaSeleccionada = this.hamburguesas.filter(
+        (burger) => burger._id === id
+      );
+      var respuesta = confirm("Confirmar la eliminación del registro");
 
-      this.ventana = true;
+      if (respuesta) {
+        this.eliminarHamburguesa(id);
+      }
+    },
+
+    eliminarHamburguesa: function(id) {
+      axios
+        .delete("https://prueba-hamburguesas.herokuapp.com/burguer/" + id)
+        .then((respuesta) => {
+          this.getHamburguesas();
+        })
+        .catch((e) => console.log(e));
     },
   },
 };
@@ -92,14 +135,41 @@ table tr:nth-child(odd) {
   background: rgba(250, 245, 245, 0.945);
 }
 .boton_detalles {
-  background-image: url("../assets/hamburguesa.png");
+  background-image: url("../assets/hamburguesa2.png");
   background-size: cover;
   border: none;
-  padding: 20px;
+  padding: 18px;
   cursor: pointer;
   transition: all 0.5s;
+  background-color: transparent;
 }
 .boton_detalles:hover {
+  width: 45px;
+  height: 45px;
+}
+.boton_elimina {
+  background-image: url("../assets/eliminar.png");
+  background-size: cover;
+  border: none;
+  padding: 18px;
+  cursor: pointer;
+  transition: all 0.5s;
+  background-color: transparent;
+}
+.boton_elimina:hover {
+  width: 45px;
+  height: 45px;
+}
+.boton_modifica {
+  background-image: url("../assets/editar.png");
+  background-size: cover;
+  border: none;
+  padding: 18px;
+  cursor: pointer;
+  transition: all 0.5s;
+  background-color: transparent;
+}
+.boton_modifica:hover {
   width: 45px;
   height: 45px;
 }
@@ -147,12 +217,12 @@ table tr:nth-child(odd) {
   justify-content: center;
 }
 .ventana_detalles {
-  background: #f8f8f8;
+  background: white;
   box-shadow: 0px 0px 5px 5px rgb(0, 0, 0, 0.3);
   border-radius: 10px;
   padding: 30px;
   width: 350px;
-  height: auto;
+  height: max-content;
   text-align: left;
 }
 
@@ -161,5 +231,27 @@ table tr:nth-child(odd) {
   display: inline-flex;
   flex-direction: column;
   align-items: left;
+}
+.titulo {
+  display: inline-flex;
+  font-weight: bold;
+  font-size: 20pt;
+  flex-direction: column;
+}
+.ventana_agregar {
+  background: white;
+  box-shadow: 0px 0px 5px 5px rgb(0, 0, 0, 0.3);
+  border-radius: 10px;
+  padding: 30px;
+  width: 350px;
+  height: max-content;
+  text-align: left;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: left;
+}
+.ventana_agregar label {
+  font-weight: bold;
+  padding: 5px;
 }
 </style>
